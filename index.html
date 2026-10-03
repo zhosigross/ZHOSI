@@ -39,6 +39,11 @@ input:focus,textarea:focus{border-color:rgba(255,255,255,.7)}
 .scale-wrap{display:inline-block;max-width:100%;vertical-align:top}
 .scale-wrap .ends{width:0;min-width:100%}
 .ends{align-items:center}
+.line-price{position:absolute;top:100%;left:var(--lp,0%);margin-top:8px;font-style:normal;color:#e3342f;font-size:14px;letter-spacing:.1em;white-space:nowrap;opacity:0;transform:translate(-50%,-6px);transition:opacity .25s ease,transform .25s ease,left .3s ease}
+.line-price.visible{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){.line-price{transition:none}}
+#budget-max{transition:color .3s ease}
+#lineB{margin-bottom:22px}
 .ends-line{position:relative;flex:1;height:4px;background:rgba(255,255,255,.3)}
 .ends-line::after{content:"";position:absolute;top:0;bottom:0;left:0;width:var(--p,0%);background:var(--w);transition:width .3s ease}
 @media(prefers-reduced-motion:reduce){.ends-line::after{transition:none}}
@@ -138,7 +143,7 @@ header,#f{transition:opacity .6s ease}
 <label><input type="radio" name="budget" value="5"><span>5</span></label>
 <label><input type="radio" name="budget" value="6"><span>6</span></label>
 </div>
-<div class="ends"><span>89 EUR</span><i class="ends-line" id="lineB"></i><span>199+ EUR</span></div></div>
+<div class="ends"><span>89 EUR</span><i class="ends-line" id="lineB"><em class="line-price" id="budget-price"></em></i><span id="budget-max">199+ EUR</span></div></div>
 </fieldset>
 
 <h2>Art requirements</h2>
@@ -272,9 +277,30 @@ header,#f{transition:opacity .6s ease}
   }
 });
 
+const budgetLbl=document.getElementById("budget-price");
+function setBudgetLabel(text,pct){
+  const vis=budgetLbl.classList.contains("visible");
+  if(!text){budgetLbl.classList.remove("visible");return;}
+  budgetLbl.textContent=text;
+  if(vis){budgetLbl.style.setProperty("--lp",pct+"%");return;}
+  budgetLbl.style.transition="none";
+  budgetLbl.style.setProperty("--lp",pct+"%");
+  void budgetLbl.offsetWidth;
+  budgetLbl.style.transition="";
+  requestAnimationFrame(()=>requestAnimationFrame(()=>budgetLbl.classList.add("visible")));
+}
 [["normal_vs_scifi","line12",10],["how_weird","line13",10],["budget","lineB",6]].forEach(([name,lineId,max])=>{
   document.querySelectorAll(`input[name="${name}"]`).forEach(r=>r.addEventListener("change",()=>{
-    document.getElementById(lineId).style.setProperty("--p",(parseInt(r.value)/max*100)+"%");
+    const val=parseInt(r.value);
+    const pct=name==="budget"?(val===1?4:(val-1)/(max-1)*100):val/max*100;
+    document.getElementById(lineId).style.setProperty("--p",pct+"%");
+    if(name==="budget"){
+      const v=parseInt(r.value);
+      document.getElementById("budget-max").style.color=v===6?"#e3342f":"";
+      const raw=89+(v-1)/5*110;
+      const nice=v===6?199:Math.ceil((raw+1)/10)*10-1;
+      setBudgetLabel((v===1||v===6)?"":nice+" EUR",pct);
+    }
   }));
 });
 
