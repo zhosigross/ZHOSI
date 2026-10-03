@@ -104,8 +104,22 @@ header,#f{transition:opacity .6s ease}
 @media(max-width:520px){.wrap{padding-top:32px}}
 
 </style>
+<script>document.documentElement.classList.add("intro");</script>
+<style>
+/* ---- INTRO ---- */
+#intro{display:none;position:fixed;inset:0;z-index:9999;background:#fff;opacity:1;transition:opacity .9s ease}
+html.intro #intro{display:block}
+#intro video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#fff}
+#intro.out{opacity:0;pointer-events:none}
+html.intro,html.intro body{overflow:hidden}
+.wrap{transition:opacity .9s ease}
+html.intro .wrap{opacity:0}
+html.intro.reveal .wrap{opacity:1}
+@media(prefers-reduced-motion:reduce){#intro,.wrap{transition-duration:.01s}}
+</style>
 </head>
 <body>
+<div id="intro" aria-hidden="true"><video id="introVideo" muted playsinline preload="auto"></video></div>
 <div class="wrap">
 <header>
   <h1>ZHOSI<br>3D/2D Art <span>Quotation</span> Form</h1>
@@ -269,6 +283,28 @@ header,#f{transition:opacity .6s ease}
 <div id="thanks"><b>Request sent.</b> Thanks! I'll get back to you on the contact you gave.</div>
 </div>
 
+<script>
+(function(){
+  var root=document.documentElement,intro=document.getElementById("intro"),v=document.getElementById("introVideo");
+  var finished=false;
+  function finish(){
+    if(finished)return;finished=true;
+    root.classList.add("reveal");          // site fades in
+    intro.classList.add("out");            // intro fades out
+    setTimeout(function(){
+      root.classList.remove("intro","reveal");
+      intro.remove();
+    },1000);
+  }
+  var portrait=window.matchMedia("(orientation: portrait)").matches||window.innerWidth<=700;
+  v.src=portrait?"zhosi-intro-mobile.mp4":"zhosi-intro-desktop.mp4";
+  v.addEventListener("ended",finish);
+  v.addEventListener("error",finish);
+  var p=v.play();
+  if(p&&p.catch)p.catch(finish);           // autoplay blocked -> just show the site
+  setTimeout(finish,8000);                 // safety net
+})();
+</script>
 <script>
 [["s12","normal_vs_scifi"],["s13","how_weird"]].forEach(([id,name])=>{
   const el=document.getElementById(id);
